@@ -31,9 +31,12 @@ export const shots: Shot[] = [
       await page.getByRole("button", { name: "Analyse risk" }).click();
       const progress = page.getByRole("list", { name: "Analysis progress" });
       await expect(progress).toBeVisible();
-      // Counts in the step details come from the same selectors as the screens that follow.
+      // Step details only render once a step completes, and their counts come from the same
+      // selectors as the screens that follow.
+      await expect(progress.getByText("92 words, recognised Brightwell Joinery Ltd")).toBeVisible();
       await expect(progress.getByText("7 fields, each with a source passage")).toBeVisible();
       await expect(progress.getByText("5 covers across 1 schedule")).toBeVisible();
+      await page.evaluate(() => window.scrollTo(0, 0));
     },
   },
   {
@@ -94,6 +97,9 @@ export const shots: Shot[] = [
       await expect(page.getByRole("dialog")).toContainText("# Submission: Brightwell Joinery Ltd");
       await page.keyboard.press("Escape");
       await expect(page.getByRole("dialog")).toBeHidden();
+      await page
+        .getByRole("heading", { name: "Panel" })
+        .evaluate((el) => el.scrollIntoView({ block: "start" }));
     },
   },
 ];

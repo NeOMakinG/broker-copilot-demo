@@ -22,11 +22,11 @@ export function PremiumChart({ rows, current }: { rows: QuoteRow[]; current: num
   const max = Math.max(current, ...data.map((d) => d.premium));
 
   return (
-    <ChartContainer config={config} className="aspect-auto h-44 w-full">
+    <ChartContainer config={config} className="aspect-auto h-48 w-full">
       <BarChart
         data={data}
         layout="vertical"
-        margin={{ top: 4, right: 56, left: 0, bottom: 0 }}
+        margin={{ top: 18, right: 56, left: 0, bottom: 0 }}
         barCategoryGap={6}
       >
         <CartesianGrid horizontal={false} strokeDasharray="3 3" />
@@ -56,7 +56,7 @@ export function PremiumChart({ rows, current }: { rows: QuoteRow[]; current: num
           strokeDasharray="4 3"
           label={{
             value: `Current ${formatCompact(current, GBP)}`,
-            position: "insideTopRight",
+            position: "top",
             fontSize: 11,
             fill: "var(--muted-foreground)",
           }}

@@ -76,7 +76,7 @@ function SubmissionHeader({ bundle }: { bundle: SubmissionBundle }) {
           <Fact label="Turnover" value={formatMoney(turnover, GBP)} />
           <Fact label="Employees" value={String(headcount)} />
           <Fact label="Covers held" value={String(held)} />
-          <Fact label="Current premium" value={formatMoney(premium, GBP)} />
+          <Fact label="Premium today" value={formatMoney(premium, GBP)} />
           <Fact label="Next renewal" value={renewal ? formatDate(renewal) : "None on file"} />
         </dl>
       </div>

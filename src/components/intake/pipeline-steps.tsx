@@ -53,7 +53,7 @@ export function PipelineSteps({ steps, onDone }: Props) {
                 />
               ) : null}
             </div>
-            <div className="flex min-w-0 flex-col pb-4">
+            <div className="flex min-w-0 flex-col pb-4" style={{ minHeight: "3.75rem" }}>
               <p
                 className={cn(
                   "text-sm font-medium",
@@ -65,15 +65,9 @@ export function PipelineSteps({ steps, onDone }: Props) {
                   {state === "done" ? ", done" : state === "running" ? ", running" : ", waiting"}
                 </span>
               </p>
-              <p
-                className={cn(
-                  "text-sm text-muted-foreground transition-opacity",
-                  state === "done" ? "opacity-100" : "opacity-0",
-                )}
-                aria-hidden={state !== "done"}
-              >
-                {step.detail}
-              </p>
+              {state === "done" ? (
+                <p className="text-sm text-muted-foreground">{step.detail}</p>
+              ) : null}
             </div>
           </li>
         );

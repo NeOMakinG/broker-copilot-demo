@@ -185,7 +185,7 @@ function IntakeForm({ samples }: { samples: Sample[] }) {
         </div>
       </div>
 
-      <Card className="gap-4 lg:self-start">
+      <Card className="gap-4 lg:sticky lg:top-20 lg:self-start">
         <CardHeader>
           <CardTitle>What the copilot does</CardTitle>
           <CardDescription>
