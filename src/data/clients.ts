@@ -14,7 +14,8 @@ export const clients = z.array(Client).parse([
     yearsTrading: 11,
     fleetSize: 3,
     premises: {
-      description: "Leased 850 sq m workshop and showroom, Holbeck, Leeds, timber frame",
+      description:
+        "Leased 850 sq m workshop and showroom, Holbeck, Leeds, timber frame, sprinklered",
       construction: "timber_frame",
       tenure: "leased",
     },
@@ -29,7 +30,7 @@ export const clients = z.array(Client).parse([
       },
     ],
     riskDescription:
-      "Brightwell Joinery Ltd, Leeds. Bespoke joinery and shopfitting for retail and hospitality clients, trading 11 years, turnover about £2.1m. 14 staff including 9 bench joiners and 3 site fitters. Workshop and showroom on a leased 850 sq m timber framed unit in Holbeck with spray booth and dust extraction. Design and fit work for a few national retail chains, orders and CAD drawings handled by email. Three vans deliver finished pieces to site. One claim in 2024, tools stolen from a van, £3,200. Renewal due 1 March 2027, current insurer Meridian Commercial.",
+      "Brightwell Joinery Ltd, Leeds. Bespoke joinery and shopfitting for retail and hospitality clients, trading 11 years, turnover about £2.1m. 14 staff including 9 bench joiners and 3 site fitters. Workshop and showroom on a leased 850 sq m timber framed unit in Holbeck with spray booth and dust extraction, sprinklers throughout. Design and fit work for a few national retail chains, orders and CAD drawings handled by email. Three vans deliver finished pieces to site. One claim in 2024, tools stolen from a van, £3,200. Renewal due 1 March 2027, current insurer Meridian Commercial.",
   },
   {
     id: "cli_002",

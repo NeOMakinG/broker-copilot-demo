@@ -42,7 +42,7 @@ This runs typecheck, Biome, Vitest, the production build, Playwright and the med
 
 Unit tests cover the appetite rules, the intake and submission rules (every typed failure has a test), the quotes table (sorting, shortlist toggling) and the fixture invariants: premiums in range, gaps never duplicating a held cover, draft values equal to the client facts, pipeline step counts equal to what the screens show, and the export repeating the on-screen figures.
 
-The e2e walks five states at 1440x900 (intake, analysis in progress, draft review with a confirm and an edit, gap flags, quote shortlist and export) and asserts the counts in the step rail after each action. A second spec checks that every screen fits a 390px viewport without horizontal overflow.
+The e2e walks five states at 1440x900 as one continuous session (intake, analysis in progress, draft review with a confirm and an edit, gap flags, quote shortlist and export) and asserts the counts in the step rail after each action, including that the draft edits are still there on the later screens. A second spec checks that every screen fits a 390px viewport without horizontal overflow.
 
 ## Notes
 

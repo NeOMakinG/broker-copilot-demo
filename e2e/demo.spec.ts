@@ -25,9 +25,10 @@ test.beforeAll(() => {
 
 test("walks the main states and captures screenshots", async ({ page }) => {
   for (const [index, shot] of shots.entries()) {
-    // Hash-only navigation keeps the document; reload so every shot starts from a fresh app state.
-    await page.goto(`#${shot.path}`);
-    await page.reload();
+    // One continuous session: the broker's edits carry over from shot to shot, as they do in the
+    // app. Hash navigation keeps the document, and a shot that is already on its path (because the
+    // previous one navigated there) is left alone.
+    if (new URL(page.url()).hash !== `#${shot.path}`) await page.goto(`#${shot.path}`);
     await expect(page.getByText(footer)).toBeVisible();
     await expect(page.locator("[aria-busy='true']")).toHaveCount(0);
     await shot.steps?.(page);
@@ -36,5 +37,6 @@ test("walks the main states and captures screenshots", async ({ page }) => {
       fullPage: false,
       animations: "disabled",
     });
+    await shot.after?.(page);
   }
 });

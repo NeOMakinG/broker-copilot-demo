@@ -10,18 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { insurers } from "@/data/insurers";
-import type { PipelineStep } from "@/data/selectors";
+import { PIPELINE_STAGES, type PipelineStep } from "@/data/selectors";
 import type { ClientId, DocumentId } from "@/lib/ids";
 import { useTRPC } from "@/lib/trpc";
 import type { PolicyDocument } from "@/schemas/document";
-
-const STAGES = [
-  "Read the risk description",
-  "Extract facts from the documents",
-  "Match the covers already held",
-  "Look for coverage gaps",
-  "Score the insurer panel",
-];
 
 export function IntakePage() {
   const trpc = useTRPC();
@@ -199,7 +191,7 @@ function IntakeForm({ samples }: { samples: Sample[] }) {
             <PipelineSteps steps={run.steps} onDone={finish} />
           ) : (
             <ol className="flex flex-col gap-3">
-              {STAGES.map((stage, index) => (
+              {PIPELINE_STAGES.map((stage, index) => (
                 <li key={stage} className="flex items-center gap-3 text-sm">
                   <span className="flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-medium text-muted-foreground">
                     {index + 1}

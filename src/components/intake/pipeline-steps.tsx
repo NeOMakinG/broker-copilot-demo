@@ -60,7 +60,7 @@ export function PipelineSteps({ steps, onDone }: Props) {
                   state === "waiting" && "text-muted-foreground",
                 )}
               >
-                {step.label}
+                {state === "done" ? step.done : state === "running" ? step.running : step.pending}
                 <span className="sr-only">
                   {state === "done" ? ", done" : state === "running" ? ", running" : ", waiting"}
                 </span>

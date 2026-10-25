@@ -24,7 +24,7 @@ export const quotes = z.array(Quote).parse([
       },
     ],
     exclusions: ["Heat work away from the premises", "Timber treatment chemicals"],
-    appetiteNote: "Holding insurer. Comfortable with the timber frame given the sprinkler system.",
+    appetiteNote: "Holding insurer. Comfortable with the timber frame given the sprinklers.",
     rules: [],
     validUntil: "2027-02-14",
     holdingInsurer: true,

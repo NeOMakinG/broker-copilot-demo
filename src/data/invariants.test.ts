@@ -22,6 +22,7 @@ import {
   gapStats,
   gapsForClient,
   nextRenewal,
+  panelRecommendation,
   pipelineSteps,
   premiumDelta,
   premiumRange,
@@ -214,11 +215,41 @@ describe("the same figures on every route", () => {
       const gaps = gapsForClient(gapFlags, client.id);
       const panel = quotesForClient(quotes, client.id);
       const steps = pipelineSteps({ client, documents: docs, submission, gaps, quotes: panel });
-      expect(steps[1]?.label).toContain(`${docs.length} document`);
+      expect(steps[1]?.done).toContain(`${docs.length} document`);
+      expect(steps[1]?.running).toContain(`${docs.length} document`);
       expect(steps[1]?.detail).toContain(`${submission.fields.length} fields`);
       expect(steps[2]?.detail).toContain(`${coverTypesHeld(docs).length} covers`);
       expect(steps[3]?.detail).toContain(`${gaps.length} likely`);
       expect(steps[4]?.detail).toContain(`${verdictCounts(panel, client).fit} within appetite`);
+    }
+  });
+
+  it("the recommendation names the cheapest quote within appetite with the table's cover count", () => {
+    for (const client of clients) {
+      const docs = documentsForClient(documents, client.id);
+      const requested = requestedCovers(docs, freshSubmission(client.id));
+      const panel = quotesForClient(quotes, client.id);
+      const current = currentPremium(docs);
+      const text = panelRecommendation({
+        quotes: panel,
+        insurers,
+        client,
+        requested,
+        currentPremium: current,
+      });
+      const fit = [...panel]
+        .sort((a, b) => a.premium - b.premium)
+        .find((q) => appetiteFor(q, client).verdict === "fit");
+      if (!fit) throw new Error("fixture has no quote within appetite");
+      const name = insurers.find((i) => i.id === fit.insurerId)?.name ?? "";
+      expect(text).toContain(`${name} is the cheapest quote within appetite`);
+      expect(text).toContain(`£${fit.premium.toLocaleString("en-GB")}`);
+      const offered = coverageMatch(fit, requested).included.length;
+      expect(text).toContain(
+        offered === requested.length
+          ? `all ${requested.length} requested covers`
+          : `${offered} of ${requested.length} covers`,
+      );
     }
   });
 

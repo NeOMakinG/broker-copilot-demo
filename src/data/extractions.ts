@@ -42,7 +42,7 @@ export const extractions = z.array(Extraction).parse([
         source: {
           documentId: "doc_002",
           excerpt:
-            "Premises: Unit 4, Holbeck, Leeds. Construction: timber frame with metal cladding, 850 sq m, leased",
+            "Premises: Unit 4, Holbeck, Leeds. Construction: timber frame with metal cladding, 850 sq m, leased. Sprinklers: yes, whole building",
         },
       },
       {

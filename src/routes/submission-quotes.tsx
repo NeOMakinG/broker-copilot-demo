@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { LightbulbIcon } from "lucide-react";
 import { FadeIn } from "@/components/fade-in";
 import { ExportDialog } from "@/components/submission/export-dialog";
 import { PremiumChart } from "@/components/submission/premium-chart";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import {
   currentPremium,
   GBP,
+  panelRecommendation,
   premiumRange,
   requestedCovers,
   verdictCounts,
@@ -40,6 +42,13 @@ export function SubmissionQuotesPage() {
     selectedIds: submission.selectedQuoteIds,
   });
   const shortlist = rows.filter((r) => r.selected);
+  const recommendation = panelRecommendation({
+    quotes,
+    insurers,
+    client,
+    requested,
+    currentPremium: current,
+  });
 
   return (
     <FadeIn delay={0.05} className="flex flex-col gap-6">
@@ -76,10 +85,13 @@ export function SubmissionQuotesPage() {
         </Card>
       </div>
 
-      <div className="flex flex-col gap-3">
+      {/* scroll-mt keeps anchored scrolls clear of the pinned client line and step rail. */}
+      <section aria-labelledby="panel-heading" className="flex scroll-mt-36 flex-col gap-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight">Panel</h2>
+            <h2 id="panel-heading" className="text-lg font-semibold tracking-tight">
+              Panel
+            </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Covers counted against the {requested.length} the submission requests. Pick up to{" "}
               {MAX_SELECTED_QUOTES} to compare side by side.
@@ -87,6 +99,17 @@ export function SubmissionQuotesPage() {
           </div>
           <ExportDialog clientId={client.id} />
         </div>
+        <p
+          role="note"
+          aria-label="Recommendation"
+          className="flex items-start gap-2.5 rounded-lg border border-signal/50 bg-highlight px-4 py-3 text-sm text-highlight-foreground"
+        >
+          <LightbulbIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span>
+            <span className="font-semibold">Recommendation. </span>
+            {recommendation}
+          </span>
+        </p>
         <QuotesTable
           rows={rows}
           onToggle={(quoteId) => toggle.mutate({ clientId: client.id, quoteId })}
@@ -98,15 +121,17 @@ export function SubmissionQuotesPage() {
             {toggle.error.message}
           </p>
         ) : null}
-      </div>
+      </section>
 
-      <div className="flex flex-col gap-3">
+      <section aria-labelledby="compare-heading" className="flex scroll-mt-36 flex-col gap-3">
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">Side by side</h2>
+          <h2 id="compare-heading" className="text-lg font-semibold tracking-tight">
+            Side by side
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {shortlist.length === 0
               ? "Add quotes from the panel to compare them cover by cover."
-              : `${shortlist.length} of ${MAX_SELECTED_QUOTES} shortlisted. Every requested cover, offered or not.`}
+              : `${shortlist.length === 1 ? "One quote" : `${shortlist.length} quotes`} side by side, with every requested cover listed, offered or not.`}
           </p>
         </div>
         {shortlist.length === 0 ? (
@@ -124,7 +149,7 @@ export function SubmissionQuotesPage() {
             addedCovers={submission.addedCovers}
           />
         )}
-      </div>
+      </section>
     </FadeIn>
   );
 }

@@ -232,13 +232,86 @@ export function isSelected(submission: Submission, quoteId: QuoteId): boolean {
   return submission.selectedQuoteIds.includes(quoteId);
 }
 
+// One line the broker can act on, above the panel table. Built from the same match and appetite
+// functions as the rows, so it never names a quote the table scores differently.
+export function panelRecommendation(input: {
+  quotes: Quote[];
+  insurers: Insurer[];
+  client: Client;
+  requested: CoverType[];
+  currentPremium: number;
+}): string {
+  const { quotes, insurers, client, requested, currentPremium: current } = input;
+  if (quotes.length === 0) return "No quotes on the panel yet.";
+  const scored = [...quotes]
+    .sort((a, b) => a.premium - b.premium)
+    .map((quote) => ({
+      quote,
+      name: insurerName(insurers, quote.insurerId),
+      verdict: appetiteFor(quote, client).verdict,
+      offered: coverageMatch(quote, requested).included.length,
+    }));
+  const total = requested.length;
+  const covers = (n: number) =>
+    n === total ? `all ${total} requested covers` : `${n} of ${total} covers`;
+  const against = (quote: Quote) => {
+    const delta = premiumDelta(quote, current);
+    if (delta === 0) return "level with today";
+    return `${formatMoney(Math.abs(delta), GBP)} ${delta > 0 ? "more" : "less"} than today`;
+  };
+
+  const sentences: string[] = [];
+  const fit = scored.find((s) => s.verdict === "fit");
+  const fullFit = scored.find((s) => s.verdict === "fit" && s.offered === total);
+  const lead = fullFit ?? fit;
+  if (lead) {
+    sentences.push(
+      `${lead.name} is the cheapest quote within appetite at ${formatMoney(lead.quote.premium, GBP)}, ${against(lead.quote)}, with ${covers(lead.offered)}.`,
+    );
+  } else {
+    sentences.push("No quote on the panel is within appetite as the submission stands.");
+  }
+  if (!fullFit) {
+    const full = scored.find((s) => s.offered === total && s.verdict !== "decline");
+    if (full) {
+      sentences.push(
+        `Only ${full.name} offers ${covers(total)}, at ${formatMoney(full.quote.premium, GBP)} and ${
+          full.verdict === "caution" ? "subject to an underwriter check" : "within appetite"
+        }.`,
+      );
+    }
+  }
+  const cheapest = scored[0];
+  if (cheapest && cheapest !== lead && cheapest.verdict === "decline") {
+    sentences.push(
+      `${cheapest.name} is cheapest at ${formatMoney(cheapest.quote.premium, GBP)} but likely to decline.`,
+    );
+  }
+  return sentences.join(" ");
+}
+
 // Pipeline summary shown while the intake is analysed. Every count comes from the selectors above.
+// Each step carries its label in three tenses so the UI never claims a step is done before it is.
 export interface PipelineStep {
   id: string;
-  label: string;
+  /** Imperative, shown before the step starts: "Score the insurer panel". */
+  pending: string;
+  /** Progressive, shown while it runs: "Scoring the insurer panel...". */
+  running: string;
+  /** Past tense, shown once it completes: "Scored the insurer panel". */
+  done: string;
   detail: string;
   durationMs: number;
 }
+
+// The five stages as the intake screen lists them before anything runs.
+export const PIPELINE_STAGES = [
+  "Read the risk description",
+  "Extract facts from the documents",
+  "Match the covers already held",
+  "Look for coverage gaps",
+  "Score the insurer panel",
+] as const;
 
 export function pipelineSteps(input: {
   client: Client;
@@ -252,34 +325,45 @@ export function pipelineSteps(input: {
   const held = coverTypesHeld(documents).length;
   const sched = schedules(documents).length;
   const verdicts = verdictCounts(quotes, client);
+  const docs = `${documents.length} ${documents.length === 1 ? "document" : "documents"}`;
   return [
     {
       id: "read",
-      label: "Read the risk description",
+      pending: PIPELINE_STAGES[0],
+      running: "Reading the risk description...",
+      done: "Read the risk description",
       detail: `${words} words, recognised ${client.name}`,
       durationMs: 650,
     },
     {
       id: "extract",
-      label: `Extracted facts from ${documents.length} ${documents.length === 1 ? "document" : "documents"}`,
+      pending: PIPELINE_STAGES[1],
+      running: `Extracting facts from ${docs}...`,
+      done: `Extracted facts from ${docs}`,
       detail: `${submission.fields.length} fields, each with a source passage`,
       durationMs: 900,
     },
     {
       id: "covers",
-      label: "Matched the covers already held",
+      pending: PIPELINE_STAGES[2],
+      running: "Matching the covers already held...",
+      done: "Matched the covers already held",
       detail: `${held} covers across ${sched} ${sched === 1 ? "schedule" : "schedules"}`,
       durationMs: 600,
     },
     {
       id: "gaps",
-      label: "Looked for coverage gaps",
+      pending: PIPELINE_STAGES[3],
+      running: "Looking for coverage gaps...",
+      done: "Looked for coverage gaps",
       detail: `${gaps.length} likely exposures with no cover`,
       durationMs: 750,
     },
     {
       id: "quotes",
-      label: "Scored the insurer panel",
+      pending: PIPELINE_STAGES[4],
+      running: "Scoring the insurer panel...",
+      done: "Scored the insurer panel",
       detail: `${quotes.length} quotes, ${verdicts.fit} within appetite`,
       durationMs: 700,
     },

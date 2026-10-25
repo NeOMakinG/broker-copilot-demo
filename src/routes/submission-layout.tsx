@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, Outlet } from "@tanstack/react-router";
 import { ArrowLeftIcon, CircleAlertIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { FadeIn } from "@/components/fade-in";
 import { SubmissionContext } from "@/components/submission/submission-context";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,9 @@ function SubmissionLoader({ clientId }: { clientId: ClientId }) {
   );
 }
 
+// Height of the app bar the strip sits under (h-14).
+const APP_BAR_PX = 56;
+
 function SubmissionHeader({ bundle }: { bundle: SubmissionBundle }) {
   const { client, submission, documents, gaps } = bundle;
   // Same selectors as the pages below: the header can't disagree with the draft.
@@ -54,64 +58,106 @@ function SubmissionHeader({ bundle }: { bundle: SubmissionBundle }) {
   const gapCounts = gapStats(gaps, submission);
   const shortlisted = submission.selectedQuoteIds.length;
 
+  // The step strip stays pinned under the app bar. Once the title block scrolls away the strip
+  // shows a compact client line so the Quotes table never loses its context.
+  const title = useRef<HTMLDivElement>(null);
+  const [condensed, setCondensed] = useState(false);
+  useEffect(() => {
+    const el = title.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setCondensed(entry ? !entry.isIntersecting : false),
+      { rootMargin: `-${APP_BAR_PX}px 0px 0px 0px`, threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <FadeIn className="mb-6 flex flex-col gap-5">
-      <div>
-        <Button asChild variant="ghost" size="sm" className="-ml-2 text-muted-foreground">
-          <Link to="/">
-            <ArrowLeftIcon />
-            New intake
-          </Link>
-        </Button>
-      </div>
-
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{client.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {client.trade}, {client.city}. Contact {client.contact.name}, {client.contact.role}.
-          </p>
+    <>
+      <FadeIn className="flex flex-col gap-5">
+        <div>
+          <Button asChild variant="ghost" size="sm" className="-ml-2 text-muted-foreground">
+            <Link to="/">
+              <ArrowLeftIcon />
+              New intake
+            </Link>
+          </Button>
         </div>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-5 lg:shrink-0 lg:gap-x-8">
-          <Fact label="Turnover" value={formatMoney(turnover, GBP)} />
-          <Fact label="Employees" value={String(headcount)} />
-          <Fact label="Covers held" value={String(held)} />
-          <Fact label="Premium today" value={formatMoney(premium, GBP)} />
-          <Fact label="Next renewal" value={renewal ? formatDate(renewal) : "None on file"} />
-        </dl>
-      </div>
 
-      <nav aria-label="Submission steps" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <ol className="grid min-w-[36rem] grid-cols-3 gap-2 sm:min-w-0">
-          <Step
-            index={1}
-            to="/submissions/$clientId"
-            clientId={client.id}
-            exact
-            title="Draft"
-            detail={`${fields.reviewed} of ${fields.total} fields reviewed`}
-          />
-          <Step
-            index={2}
-            to="/submissions/$clientId/gaps"
-            clientId={client.id}
-            title="Gaps"
-            detail={`${gapCounts.added} of ${gapCounts.total} added`}
-          />
-          <Step
-            index={3}
-            to="/submissions/$clientId/quotes"
-            clientId={client.id}
-            title="Quotes"
-            detail={
-              shortlisted === 0
-                ? `${bundle.quotes.length} on the panel`
-                : `${shortlisted} shortlisted`
-            }
-          />
-        </ol>
-      </nav>
-    </FadeIn>
+        <div
+          ref={title}
+          className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+        >
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-semibold tracking-tight">{client.name}</h1>
+            <p className="text-sm text-muted-foreground">
+              {client.trade}, {client.city}. Contact {client.contact.name}, {client.contact.role}.
+            </p>
+          </div>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-5 lg:shrink-0 lg:gap-x-8">
+            <Fact label="Turnover" value={formatMoney(turnover, GBP)} />
+            <Fact label="Employees" value={String(headcount)} />
+            <Fact label="Covers held" value={String(held)} />
+            <Fact label="Premium today" value={formatMoney(premium, GBP)} />
+            <Fact label="Next renewal" value={renewal ? formatDate(renewal) : "None on file"} />
+          </dl>
+        </div>
+      </FadeIn>
+
+      <div
+        className={cn(
+          "sticky z-30 mt-5 mb-6 border-b border-transparent bg-background/95 py-2 backdrop-blur transition-colors",
+          condensed && "border-border",
+        )}
+        style={{ top: APP_BAR_PX }}
+      >
+        <div className="flex items-center gap-4 lg:gap-6">
+          {condensed ? (
+            <p className="hidden min-w-0 shrink-0 flex-col lg:flex">
+              <span className="truncate text-sm font-semibold">{client.name}</span>
+              <span className="tabular truncate text-xs text-muted-foreground">
+                {formatMoney(turnover, GBP)} turnover, {headcount} employees,{" "}
+                {formatMoney(premium, GBP)} today
+              </span>
+            </p>
+          ) : null}
+          <nav
+            aria-label="Submission steps"
+            className="-mx-4 min-w-0 flex-1 overflow-x-auto px-4 sm:mx-0 sm:px-0"
+          >
+            <ol className="grid min-w-[36rem] grid-cols-3 gap-2 sm:min-w-0">
+              <Step
+                index={1}
+                to="/submissions/$clientId"
+                clientId={client.id}
+                exact
+                title="Draft"
+                detail={`${fields.reviewed} of ${fields.total} fields reviewed`}
+              />
+              <Step
+                index={2}
+                to="/submissions/$clientId/gaps"
+                clientId={client.id}
+                title="Gaps"
+                detail={`${gapCounts.added} of ${gapCounts.total} added`}
+              />
+              <Step
+                index={3}
+                to="/submissions/$clientId/quotes"
+                clientId={client.id}
+                title="Quotes"
+                detail={
+                  shortlisted === 0
+                    ? `${bundle.quotes.length} on the panel`
+                    : `${shortlisted} shortlisted`
+                }
+              />
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </>
   );
 }
 
