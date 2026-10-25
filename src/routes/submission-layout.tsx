@@ -72,7 +72,7 @@ function SubmissionHeader({ bundle }: { bundle: SubmissionBundle }) {
             {client.trade}, {client.city}. Contact {client.contact.name}, {client.contact.role}.
           </p>
         </div>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-5 lg:gap-x-8">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-5 lg:shrink-0 lg:gap-x-8">
           <Fact label="Turnover" value={formatMoney(turnover, GBP)} />
           <Fact label="Employees" value={String(headcount)} />
           <Fact label="Covers held" value={String(held)} />
@@ -118,7 +118,7 @@ function SubmissionHeader({ bundle }: { bundle: SubmissionBundle }) {
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dt className="text-xs whitespace-nowrap text-muted-foreground">{label}</dt>
       <dd className="tabular font-medium">{value}</dd>
     </div>
   );
