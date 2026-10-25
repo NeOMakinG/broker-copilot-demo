@@ -12,74 +12,88 @@ export interface Shot {
 // The main states of the prototype, in demo order. The e2e spec walks this list.
 export const shots: Shot[] = [
   {
-    name: "overview",
+    name: "intake",
     path: "/",
     steps: async (page) => {
-      await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
-      await expect(page.getByText("Showing 8 of 8 accounts")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "New risk intake" })).toBeVisible();
+      await page.getByRole("button", { name: "Brightwell Joinery Ltd" }).click();
+      await expect(page.getByLabel("Risk description")).toHaveValue(/Brightwell Joinery Ltd/);
+      await expect(
+        page.getByRole("list", { name: "Attached documents" }).getByRole("listitem"),
+      ).toHaveCount(2);
     },
   },
   {
-    name: "overview-filtered",
+    name: "analysing",
     path: "/",
     steps: async (page) => {
-      await page.getByLabel("Filter accounts").fill("credit");
-      await expect(page.getByText("Showing 2 of 8 accounts")).toBeVisible();
-      await page.getByRole("button", { name: "Balance" }).click();
-      await expect(page.getByRole("columnheader", { name: "Balance" })).toHaveAttribute(
+      await page.getByRole("button", { name: "Brightwell Joinery Ltd" }).click();
+      await page.getByRole("button", { name: "Analyse risk" }).click();
+      const progress = page.getByRole("list", { name: "Analysis progress" });
+      await expect(progress).toBeVisible();
+      // Counts in the step details come from the same selectors as the screens that follow.
+      await expect(progress.getByText("7 fields, each with a source passage")).toBeVisible();
+      await expect(progress.getByText("5 covers across 1 schedule")).toBeVisible();
+    },
+  },
+  {
+    name: "submission-draft",
+    path: "/submissions/cli_001",
+    steps: async (page) => {
+      await expect(page.getByRole("heading", { name: "Brightwell Joinery Ltd" })).toBeVisible();
+      await expect(page.getByText("0 of 7 fields reviewed")).toBeVisible();
+      await page.getByRole("button", { name: "Confirm Annual turnover" }).click();
+      await expect(page.getByText("1 of 7 fields reviewed")).toBeVisible();
+      await page.getByRole("button", { name: "Edit Employees" }).click();
+      await page.getByLabel("Employees", { exact: true }).fill("15");
+      await page.getByRole("button", { name: "Save" }).click();
+      await expect(page.getByText("Edited by broker")).toBeVisible();
+      await expect(page.getByText("2 of 7 fields reviewed")).toBeVisible();
+    },
+  },
+  {
+    name: "gap-flags",
+    path: "/submissions/cli_001/gaps",
+    steps: async (page) => {
+      await expect(page.getByRole("heading", { name: "Likely gaps" })).toBeVisible();
+      await expect(page.getByText("0 of 4 added")).toBeVisible();
+      await page.getByRole("button", { name: "Add Cyber and data to submission" }).click();
+      await expect(page.getByText("1 of 4 added")).toBeVisible();
+      await page.getByRole("button", { name: "Add Business interruption to submission" }).click();
+      await expect(page.getByText("2 of 4 added")).toBeVisible();
+      await expect(
+        page.getByRole("list", { name: "Covers requested" }).getByRole("listitem"),
+      ).toHaveCount(7);
+    },
+  },
+  {
+    name: "quote-comparison",
+    // Starts on the gaps step so the comparison includes covers the broker just added.
+    path: "/submissions/cli_001/gaps",
+    steps: async (page) => {
+      await page.getByRole("button", { name: "Add Cyber and data to submission" }).click();
+      await page.getByRole("button", { name: "Add Business interruption to submission" }).click();
+      await page.getByRole("button", { name: "Add Professional indemnity to submission" }).click();
+      await expect(page.getByText("3 of 4 added")).toBeVisible();
+      await page.getByRole("link", { name: "Compare quotes" }).click();
+      await expect(page.getByRole("heading", { name: "Panel" })).toBeVisible();
+      await expect(page.getByRole("columnheader", { name: "Premium" })).toHaveAttribute(
         "aria-sort",
-        "descending",
+        "ascending",
       );
-    },
-  },
-  {
-    name: "account-credit",
-    path: "/accounts/acc_003",
-    steps: async (page) => {
-      await expect(page.getByRole("heading", { name: "Fleet Fuel Card" })).toBeVisible();
-      await expect(page.getByText("Utilization")).toBeVisible();
-      await expect(page.getByRole("progressbar", { name: "Credit utilization" })).toBeVisible();
-    },
-  },
-  {
-    name: "edit-dialog",
-    path: "/accounts/acc_003",
-    steps: async (page) => {
-      await page.getByRole("button", { name: "Edit" }).click();
-      await expect(page.getByRole("dialog", { name: "Edit account" })).toBeVisible();
-      await page.getByLabel("Credit limit (USD)").fill("1000");
-      await page.getByRole("button", { name: "Save changes" }).click();
-      await expect(page.getByRole("alert")).toContainText("cannot be below the amount owed");
-    },
-  },
-  {
-    name: "edit-saved",
-    path: "/accounts/acc_003",
-    steps: async (page) => {
-      await page.getByRole("button", { name: "Edit" }).click();
-      await page.getByLabel("Name").fill("Fleet Fuel Cards");
-      await page.getByRole("button", { name: "Save changes" }).click();
+      await page.getByRole("button", { name: "Compare Meridian Commercial" }).click();
+      await page.getByRole("button", { name: "Compare Stonebridge Specialty" }).click();
+      await expect(page.getByText("2 shortlisted")).toBeVisible();
+      const compare = page.getByRole("table", { name: "Quote comparison" });
+      await expect(compare).toBeVisible();
+      await expect(compare.getByText("Likely decline")).toHaveCount(0);
+      // Meridian lacks cyber and professional indemnity; Stonebridge offers all eight requested covers.
+      await expect(compare.getByText("Not offered")).toHaveCount(2);
+      await page.getByRole("button", { name: "Export" }).click();
+      await expect(page.getByRole("dialog", { name: "Export submission" })).toBeVisible();
+      await expect(page.getByRole("dialog")).toContainText("# Submission: Brightwell Joinery Ltd");
+      await page.keyboard.press("Escape");
       await expect(page.getByRole("dialog")).toBeHidden();
-      await expect(page.getByRole("heading", { name: "Fleet Fuel Cards" })).toBeVisible();
-    },
-  },
-  {
-    name: "edit-locked",
-    path: "/accounts/acc_001",
-    steps: async (page) => {
-      await page.getByRole("combobox", { name: "Signed in as" }).click();
-      await page.getByRole("option", { name: /Mei Lindqvist/ }).click();
-      await expect(page.getByRole("heading", { name: "Northwind Payroll" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Edit" })).toBeDisabled();
-      await page.getByRole("button", { name: "Edit" }).hover();
-      await expect(page.getByRole("tooltip")).toContainText("Only admins or the account owner");
-    },
-  },
-  {
-    name: "not-found",
-    path: "/accounts/acc_404",
-    steps: async (page) => {
-      await expect(page.getByRole("heading", { name: "Account not found" })).toBeVisible();
     },
   },
 ];

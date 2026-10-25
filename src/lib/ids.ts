@@ -1,14 +1,32 @@
 import { z } from "zod";
 
-// Branded ids: an AccountId can never be passed where a UserId is expected.
-export const AccountId = z
+// Branded ids: a QuoteId can never be passed where a ClientId is expected.
+export const ClientId = z
   .string()
-  .regex(/^acc_\d{3}$/)
-  .brand<"AccountId">();
-export type AccountId = z.infer<typeof AccountId>;
+  .regex(/^cli_\d{3}$/)
+  .brand<"ClientId">();
+export type ClientId = z.infer<typeof ClientId>;
 
-export const UserId = z
+export const DocumentId = z
   .string()
-  .regex(/^usr_\d{3}$/)
-  .brand<"UserId">();
-export type UserId = z.infer<typeof UserId>;
+  .regex(/^doc_\d{3}$/)
+  .brand<"DocumentId">();
+export type DocumentId = z.infer<typeof DocumentId>;
+
+export const InsurerId = z
+  .string()
+  .regex(/^ins_\d{3}$/)
+  .brand<"InsurerId">();
+export type InsurerId = z.infer<typeof InsurerId>;
+
+export const QuoteId = z
+  .string()
+  .regex(/^qte_\d{3}$/)
+  .brand<"QuoteId">();
+export type QuoteId = z.infer<typeof QuoteId>;
+
+export const GapId = z
+  .string()
+  .regex(/^gap_\d{3}$/)
+  .brand<"GapId">();
+export type GapId = z.infer<typeof GapId>;

@@ -12,7 +12,7 @@ export function NotFoundPage() {
       <Button asChild variant="outline">
         <Link to="/">
           <ArrowLeftIcon />
-          Back to overview
+          Back to intake
         </Link>
       </Button>
     </Card>

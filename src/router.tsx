@@ -5,9 +5,12 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/app-shell";
-import { AccountPage } from "@/routes/account";
+import { IntakePage } from "@/routes/intake";
 import { NotFoundPage } from "@/routes/not-found";
-import { OverviewPage } from "@/routes/overview";
+import { SubmissionDraftPage } from "@/routes/submission-draft";
+import { SubmissionGapsPage } from "@/routes/submission-gaps";
+import { SubmissionLayout } from "@/routes/submission-layout";
+import { SubmissionQuotesPage } from "@/routes/submission-quotes";
 
 // Code-based routes (no codegen). Hash history keeps deep links working on GitHub Pages.
 export const rootRoute = createRootRoute({
@@ -15,19 +18,41 @@ export const rootRoute = createRootRoute({
   notFoundComponent: NotFoundPage,
 });
 
-export const overviewRoute = createRoute({
+export const intakeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: OverviewPage,
+  component: IntakePage,
 });
 
-export const accountRoute = createRoute({
+// One submission per client: the layout carries the client header and the Draft / Gaps / Quotes rail.
+export const submissionRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/accounts/$accountId",
-  component: AccountPage,
+  path: "/submissions/$clientId",
+  component: SubmissionLayout,
 });
 
-const routeTree = rootRoute.addChildren([overviewRoute, accountRoute]);
+export const submissionDraftRoute = createRoute({
+  getParentRoute: () => submissionRoute,
+  path: "/",
+  component: SubmissionDraftPage,
+});
+
+export const submissionGapsRoute = createRoute({
+  getParentRoute: () => submissionRoute,
+  path: "gaps",
+  component: SubmissionGapsPage,
+});
+
+export const submissionQuotesRoute = createRoute({
+  getParentRoute: () => submissionRoute,
+  path: "quotes",
+  component: SubmissionQuotesPage,
+});
+
+const routeTree = rootRoute.addChildren([
+  intakeRoute,
+  submissionRoute.addChildren([submissionDraftRoute, submissionGapsRoute, submissionQuotesRoute]),
+]);
 
 export const router = createRouter({
   routeTree,
